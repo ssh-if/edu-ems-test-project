@@ -14,13 +14,13 @@ API-M02-001,学员管理,获取学员列表,GET,/api/student/list,ZW-API-012,分
 API-M02-001,学员管理,获取学员列表,GET,/api/student/list,ZW-API-013,size=1000 上限限制,"Authorization: Bearer {token}",size=10000,200,按配置上限100截断 防止拖库,P0,安全,已通过
 API-M02-001,学员管理,获取学员列表,GET,/api/student/list,ZW-API-014,未授权访问 无token,,无Authorization,401,401状态 code=401,P0,鉴权,已通过
 API-M02-001,学员管理,获取学员列表,GET,/api/student/list,ZW-API-015,数据权限-销售仅见自己的学员,"Authorization: Bearer {sales01_token}",无参查全部,200,data.records中每条.followUserId==sales01_id,P0,数据权限,已失败-已修复
-API-M02-001,学员管理,获取学员列表,GET,/api/student/list,ZW-API-016,条件搜索-手机号精确,"Authorization: Bearer {token}",keyword=13800138001,200,返回1条 且mobile==13800138001,P1,查询,已通过
+API-M02-001,学员管理,获取学员列表,GET,/api/student/list,ZW-API-016,条件搜索-手机号精确,"Authorization: Bearer {token}",keyword=138****0000,200,返回1条 且mobile==138****0000,P1,查询,已通过
 API-M02-001,学员管理,获取学员列表,GET,/api/student/list,ZW-API-017,多条件 校区+状态+来源,"Authorization: Bearer {token}",campusId=1&status=在读&source=转介绍,200,所有结果同时满足 与SQL count一致,P1,组合查询,已通过
 API-M02-001,学员管理,获取学员列表,GET,/api/student/list,ZW-API-018,排序-sort=createTime order=desc,"Authorization: Bearer {token}",sort=createTime&order=desc,200,records按createTime从新到旧,P1,排序,已通过
-API-M02-002,学员管理,新增学员,POST,/api/student,ZW-API-019,新增-完整参数成功,"Authorization: Bearer {token} Content-Type: application/json","{""name"":""接口测试学员"",""mobile"":""13911110001"",""gender"":1,""gradeId"":3,""sourceId"":1,""campusId"":1,""followUserId"":1}",201或200,code=0 data.id>0 数据库存在记录,P0,新增,已通过
-API-M02-002,学员管理,新增学员,POST,/api/student,ZW-API-020,新增-重复手机号拦截,"Authorization: Bearer {token}","{""name"":""重复"",""mobile"":""13800138001""}",200,code=2001 msg=该手机号已存在,P0,唯一约束,已通过
+API-M02-002,学员管理,新增学员,POST,/api/student,ZW-API-019,新增-完整参数成功,"Authorization: Bearer {token} Content-Type: application/json","{""name"":""接口测试学员"",""mobile"":""138****0000"",""gender"":1,""gradeId"":3,""sourceId"":1,""campusId"":1,""followUserId"":1}",201或200,code=0 data.id>0 数据库存在记录,P0,新增,已通过
+API-M02-002,学员管理,新增学员,POST,/api/student,ZW-API-020,新增-重复手机号拦截,"Authorization: Bearer {token}","{""name"":""重复"",""mobile"":""138****0000""}",200,code=2001 msg=该手机号已存在,P0,唯一约束,已通过
 API-M02-002,学员管理,新增学员,POST,/api/student,ZW-API-021,新增-无权限用户403,"Authorization: Bearer {无新增权限角色token}",同正常参数,403,状态403 code=403,P0,鉴权,已通过
-API-M02-002,学员管理,新增学员,POST,/api/student,ZW-API-022,新增-mobile为12位超长,"Authorization: Bearer {token}","{""mobile"":""138001380011""}",200,code=400 msg=手机号格式错误,P1,边界,已通过
+API-M02-002,学员管理,新增学员,POST,/api/student,ZW-API-022,新增-mobile为12位超长,"Authorization: Bearer {token}","{""mobile"":""138****00001""}",200,code=400 msg=手机号格式错误,P1,边界,已通过
 API-M02-002,学员管理,新增学员,POST,/api/student,ZW-API-023,新增-name为空,"Authorization: Bearer {token}","{""name"":""""}",200,code=400 msg=姓名必填,P0,参数校验,已通过
 API-M02-002,学员管理,新增学员,POST,/api/student,ZW-API-024,新增-XSS name=<script>alert(1)</script>,"Authorization: Bearer {token}","{""name"":""<script>alert(1)</script>""}",200,保存被转义 或code=400拦截,P0,XSS,已通过
 API-M02-003,学员管理,编辑学员,PUT,/api/student/{id},ZW-API-025,编辑-正常修改成功,"Authorization: Bearer {token}","{""id"":1001,""name"":""修改名""}",200,code=0 数据库name被更新,P0,修改,已通过
