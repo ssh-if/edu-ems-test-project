@@ -1,0 +1,21 @@
+{
+  "id": "zw-edu-env-sit",
+  "name": "紫薇教育-SIT测试环境",
+  "values": [
+    { "key": "baseUrl", "value": "http://test.ziweiedu.com:8080", "enabled": true },
+    { "key": "admin_username", "value": "admin", "enabled": true },
+    { "key": "admin_password", "value": "Admin@123#", "enabled": true },
+    { "key": "sales_username", "value": "sales01", "enabled": true },
+    { "key": "sales_password", "value": "Sales@123", "enabled": true },
+    { "key": "finance_username", "value": "finance01", "enabled": true },
+    { "key": "finance_password", "value": "Finance@123", "enabled": true },
+    { "key": "db_host", "value": "192.168.1.100", "enabled": true },
+    { "key": "db_port", "value": "3306", "enabled": true },
+    { "key": "db_schema", "value": "ziwei_sit", "enabled": true },
+    { "key": "db_user", "value": "ziwei_test", "enabled": true },
+    { "key": "db_password", "value": "********", "enabled": true }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_at": "2025-06-20",
+  "_postman_exported_using": "Postman/10.x"
+}
