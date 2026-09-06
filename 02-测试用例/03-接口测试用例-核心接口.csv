@@ -1,0 +1,132 @@
+接口ID,模块,接口名称,请求方式,URL,用例编号,用例标题,请求头,请求参数(示例),预期状态码,预期响应,优先级,断言点,测试结果
+API-M01-001,权限登录,用户登录,POST,/api/auth/login,ZW-API-001,登录-正确账号密码返回token,"Content-Type: application/json","{""username"":""admin"",""password"":""Admin@123""}",200,"{""code"":0,""msg"":""成功"",""data"":{""token"":""eyJhbG...30字符以上"",""userInfo"":{""userId"":1,""username"":""admin"",""roles"":[""admin""]}}}",P0,code=0;token非空且长度>30;userId=1,已通过
+API-M01-001,权限登录,用户登录,POST,/api/auth/login,ZW-API-002,登录-密码错误,"Content-Type: application/json","{""username"":""admin"",""password"":""wrong123""}",200,"{""code"":1001,""msg"":""用户名或密码错误""}",P0,code=1001;data无token,已通过
+API-M01-001,权限登录,用户登录,POST,/api/auth/login,ZW-API-003,登录-账号为空,"Content-Type: application/json","{""username"":"""",""password"":""Admin@123""}",200,"{""code"":400,""msg"":""用户名不能为空""}",P0,code=400,已通过
+API-M01-001,权限登录,用户登录,POST,/api/auth/login,ZW-API-004,登录-连续5次失败锁定30分钟,"Content-Type: application/json",连续5次错误密码,200,第6次返回 code=1008 msg=账号已锁定 请30分钟后重试,P0,锁定机制;剩余次数正确,已通过
+API-M01-001,权限登录,用户登录,POST,/api/auth/login,ZW-API-005,登录-SQL注入 username=" OR 1=1 --,"Content-Type: application/json","{""username"":""' OR 1=1 --"",""password"":""any""}",200,code=1001 不返回任何用户数据,P0,防注入,已通过
+API-M01-001,权限登录,用户登录,POST,/api/auth/login,ZW-API-006,登录-密码不做明文传输,"Content-Type: application/json",抓包查看,200,password字段为密文或加密传输 非明文,P0,安全,已通过
+API-M01-001,权限登录,用户登录,POST,/api/auth/login,ZW-API-007,登录-成功后返回用户权限菜单,"Content-Type: application/json",正确账号密码,200,data.permissions数组包含该角色所有菜单 P0级都出现,P1,权限,已通过
+API-M01-001,权限登录,用户登录,POST,/api/auth/login,ZW-API-008,登录-token过期时间=24h,"Content-Type: application/json",登录,200,解析token exp字段 = 86400秒,P0,配置,已通过
+API-M01-002,权限登录,刷新Token,POST,/api/auth/refresh,ZW-API-009,refreshToken-在有效期内刷新,"Authorization: Bearer {token}","{""refreshToken"":""{valid_refresh}""}",200,返回新token+新refreshToken 旧token在宽限期外失效,P0,双token机制,已通过
+API-M01-002,权限登录,刷新Token,POST,/api/auth/refresh,ZW-API-010,refreshToken-过期后拒绝,"Authorization: Bearer {token}","{""refreshToken"":""{expired}""}",401,code=401 msg=登录已过期请重新登录,P0,过期机制,已通过
+API-M02-001,学员管理,获取学员列表,GET,/api/student/list,ZW-API-011,分页查询-默认page=1 size=10,"Authorization: Bearer {admin_token}",page=1&size=10,200,"code=0 data.records.size=10 data.total≥10 data.current=1",P0,分页字段正确,已通过
+API-M02-001,学员管理,获取学员列表,GET,/api/student/list,ZW-API-012,分页page=0 边界值处理,"Authorization: Bearer {token}",page=0,200,自动修正为page=1 或返回空但不500,P1,边界,已通过
+API-M02-001,学员管理,获取学员列表,GET,/api/student/list,ZW-API-013,size=1000 上限限制,"Authorization: Bearer {token}",size=10000,200,按配置上限100截断 防止拖库,P0,安全,已通过
+API-M02-001,学员管理,获取学员列表,GET,/api/student/list,ZW-API-014,未授权访问 无token,,无Authorization,401,401状态 code=401,P0,鉴权,已通过
+API-M02-001,学员管理,获取学员列表,GET,/api/student/list,ZW-API-015,数据权限-销售仅见自己的学员,"Authorization: Bearer {sales01_token}",无参查全部,200,data.records中每条.followUserId==sales01_id,P0,数据权限,已失败-已修复
+API-M02-001,学员管理,获取学员列表,GET,/api/student/list,ZW-API-016,条件搜索-手机号精确,"Authorization: Bearer {token}",keyword=13800138001,200,返回1条 且mobile==13800138001,P1,查询,已通过
+API-M02-001,学员管理,获取学员列表,GET,/api/student/list,ZW-API-017,多条件 校区+状态+来源,"Authorization: Bearer {token}",campusId=1&status=在读&source=转介绍,200,所有结果同时满足 与SQL count一致,P1,组合查询,已通过
+API-M02-001,学员管理,获取学员列表,GET,/api/student/list,ZW-API-018,排序-sort=createTime order=desc,"Authorization: Bearer {token}",sort=createTime&order=desc,200,records按createTime从新到旧,P1,排序,已通过
+API-M02-002,学员管理,新增学员,POST,/api/student,ZW-API-019,新增-完整参数成功,"Authorization: Bearer {token} Content-Type: application/json","{""name"":""接口测试学员"",""mobile"":""13911110001"",""gender"":1,""gradeId"":3,""sourceId"":1,""campusId"":1,""followUserId"":1}",201或200,code=0 data.id>0 数据库存在记录,P0,新增,已通过
+API-M02-002,学员管理,新增学员,POST,/api/student,ZW-API-020,新增-重复手机号拦截,"Authorization: Bearer {token}","{""name"":""重复"",""mobile"":""13800138001""}",200,code=2001 msg=该手机号已存在,P0,唯一约束,已通过
+API-M02-002,学员管理,新增学员,POST,/api/student,ZW-API-021,新增-无权限用户403,"Authorization: Bearer {无新增权限角色token}",同正常参数,403,状态403 code=403,P0,鉴权,已通过
+API-M02-002,学员管理,新增学员,POST,/api/student,ZW-API-022,新增-mobile为12位超长,"Authorization: Bearer {token}","{""mobile"":""138001380011""}",200,code=400 msg=手机号格式错误,P1,边界,已通过
+API-M02-002,学员管理,新增学员,POST,/api/student,ZW-API-023,新增-name为空,"Authorization: Bearer {token}","{""name"":""""}",200,code=400 msg=姓名必填,P0,参数校验,已通过
+API-M02-002,学员管理,新增学员,POST,/api/student,ZW-API-024,新增-XSS name=<script>alert(1)</script>,"Authorization: Bearer {token}","{""name"":""<script>alert(1)</script>""}",200,保存被转义 或code=400拦截,P0,XSS,已通过
+API-M02-003,学员管理,编辑学员,PUT,/api/student/{id},ZW-API-025,编辑-正常修改成功,"Authorization: Bearer {token}","{""id"":1001,""name"":""修改名""}",200,code=0 数据库name被更新,P0,修改,已通过
+API-M02-003,学员管理,编辑学员,PUT,/api/student/{id},ZW-API-026,编辑-id不存在,PUT  /api/student/99999999,{name:any},200,code=404 msg=学员不存在,P0,不存在,已通过
+API-M02-003,学员管理,编辑学员,PUT,/api/student/{id},ZW-API-027,编辑-跨校区越权修改,"Authorization: Bearer {东葛校区}",id=琅东校区学员ID,403,403 DB无修改,P0,越权,已通过
+API-M02-004,学员管理,删除学员,DELETE,/api/student/{id},ZW-API-028,删除-软删除 deleted=1,"Authorization: Bearer {admin}",id=存在,200,code=0 DB查询deleted=1,P0,删除,已通过
+API-M02-004,学员管理,删除学员,DELETE,/api/student/{id},ZW-API-029,删除-有关联订单不允许,"Authorization: Bearer {admin}",id=有订单学员ID,200,code=3001 msg=该学员存在订单,不允许删除,P0,业务约束,已通过
+API-M02-004,学员管理,删除学员,DELETE,/api/student/{id},ZW-API-030,删除-销售无权限删别人学员,"Authorization: Bearer {sales02}",id=sales01学员,403,403,P0,权限,已通过
+API-M02-005,学员管理,学员详情,GET,/api/student/{id},ZW-API-031,详情-字段完整,"Authorization: Bearer {admin}",id=1001,200,data包含 name mobile grade source followUser campus createdAt 等字段,P0,详情,已通过
+API-M02-005,学员管理,学员详情,GET,/api/student/{id},ZW-API-032,详情-敏感字段脱敏 非管理员看手机号,"Authorization: Bearer {sales}",id=任意,200,mobile返回138****8001 中间4位星号,P0,安全脱敏,已失败-已修复
+API-M02-006,学员管理,导入学员,POST,/api/student/import,ZW-API-033,导入-xlsx文件正确2000条,"Authorization: Bearer {admin}",multipart/form-data file=正确xlsx,200,code=0 data.success=2000 data.fail=0,P1,导入,已通过
+API-M02-006,学员管理,导入学员,POST,/api/student/import,ZW-API-034,导入-exe文件拦截,"Authorization: Bearer {admin}",file=test.exe,200,code=400 msg=仅支持xlsx/xls,P0,安全上传,已通过
+API-M02-006,学员管理,导入学员,POST,/api/student/import,ZW-API-035,导入-大小>50MB拒绝,"Authorization: Bearer {admin}",file=60MB.xlsx,413,413 Payload Too Large,P0,大小限制,已通过
+API-M02-007,学员管理,导出学员,GET,/api/student/export,ZW-API-036,导出-异步任务返回任务ID,"Authorization: Bearer {admin}",条件筛选,200,返回taskId 且可通过/task/{taskId}查询进度,P1,异步,已通过
+API-M04-001,报名缴费,创建报名订单,POST,/api/enrollment,ZW-API-037,下单-全款微信支付成功流程,POST请求 + 支付回调,/api/enrollment,200,订单创建→发起支付→回调成功→订单已支付→课时到账,P0,全链路,已通过
+API-M04-001,报名缴费,创建报名订单,POST,/api/enrollment,ZW-API-038,下单-金额后端校验 前端篡改price=0.01,请求体amount=0.01,POST下单,200,以后端price表为准,返回实付=1800 不按前端,P0,安全金额,已通过
+API-M04-001,报名缴费,创建报名订单,POST,/api/enrollment,ZW-API-039,下单-学生ID不存在,"Authorization: Bearer {token}","{""studentId"":9999999}",200,code=404 msg=学员不存在,P1,参数,已通过
+API-M04-001,报名缴费,创建报名订单,POST,/api/enrollment,ZW-API-040,下单-课程ID不存在,"Authorization: Bearer {token}","{""courseId"":9999999}",200,code=404 msg=课程不存在,P1,参数,已通过
+API-M04-001,报名缴费,创建报名订单,POST,/api/enrollment,ZW-API-041,下单-课时=0,课时数=0,POST,200,code=400 课时数必须≥1,P1,边界,已通过
+API-M04-001,报名缴费,创建报名订单,POST,/api/enrollment,ZW-API-042,下单-课时=负数,-1,POST,200,code=400,P1,边界,已通过
+API-M04-001,报名缴费,创建报名订单,POST,/api/enrollment,ZW-API-043,下单-优惠id无效 不存在,用不存在的couponId,POST,200,code=2010 优惠无效,P1,业务校验,已通过
+API-M04-001,报名缴费,创建报名订单,POST,/api/enrollment,ZW-API-044,下单-重复提交 幂等,同样的请求2次,POST×2,200,仅创建1个订单 第2次返回相同orderId或code=重复提交,P0,幂等,已通过
+API-M04-001,报名缴费,创建报名订单,POST,/api/enrollment,ZW-API-045,下单-课程班级时间冲突检测,已同时段另一个班,POST,200,code=3002 班级时间冲突,P0,业务规则,已失败-已修复
+API-M04-002,报名缴费,订单列表,GET,/api/enrollment/list,ZW-API-046,分页+条件+金额排序,page=1&size=20&sort=amount&order=desc,200,分页正确 金额从大到小,P1,查询,已通过
+API-M04-002,报名缴费,订单列表,GET,/api/enrollment/list,ZW-API-047,财务可见金额 销售不可见,"Authorization: Bearer {sales}",订单列表,200,sales的响应中 amount=null或****,P0,权限脱敏,已通过
+API-M04-003,报名缴费,订单详情,GET,/api/enrollment/{id},ZW-API-048,详情-含支付记录+消耗记录+操作日志,id存在,200,data含paymentList consumeList logList 三个子数组,P1,详情,已通过
+API-M04-003,报名缴费,订单详情,GET,/api/enrollment/{id},ZW-API-049,详情-越权查其他校区订单,"Authorization: Bearer {东葛}",id=琅东订单,403,403,P0,权限,已通过
+API-M04-004,报名缴费,退费申请,POST,/api/refund,ZW-API-050,退费-正常流程 创建成功,正常参数,POST,200,code=0 状态=待财务审核 余额与金额计算正确,P0,退费,已通过
+API-M04-004,报名缴费,退费申请,POST,/api/refund,ZW-API-051,退费-金额>可退金额,参数退2000 可退1500,POST,200,code=400 退款金额超限,P0,金额校验,已通过
+API-M04-004,报名缴费,退费申请,POST,/api/refund,ZW-API-052,退费-同一订单重复申请,同orderId两次申请,POST×2,200,第2次提示存在待审核退费申请,P0,重复,已通过
+API-M04-005,报名缴费,退费审核,PUT,/api/refund/{id}/audit,ZW-API-053,财务审核通过,"Authorization: Bearer {finance}",id=待审 同意,200,状态=待校长审核,非终态,P1,工作流,已通过
+API-M04-005,报名缴费,退费审核,PUT,/api/refund/{id}/audit,ZW-API-054,财务拒绝必须填原因,"Authorization: Bearer {finance}",reason=空,200,code=400 必须填写拒绝原因,P1,工作流,已通过
+API-M04-006,报名缴费,支付回调,POST,/api/pay/callback/wx,ZW-API-055,微信回调-正常验签通过,微信加密字段,POST回调,200,返回<xml><return_code>SUCCESS</xml> 订单更新为已支付,DB流水有记录,P0,回调,已通过
+API-M04-006,报名缴费,支付回调,POST,/api/pay/callback/wx,ZW-API-056,微信回调-篡改金额 验签失败,改total_fee,POST回调,200,返回FAIL 订单状态不变 记录告警日志,P0,安全验签,已通过
+API-M04-006,报名缴费,支付回调,POST,/api/pay/callback/wx,ZW-API-057,微信回调-重复通知幂等,同样回调2次,POST×2,200,两次都返回SUCCESS 订单只更新一次 课时只加一次,P0,幂等,已通过
+API-M04-006,报名缴费,支付回调,POST,/api/pay/callback/wx,ZW-API-058,微信回调-订单不存在,out_trade_no=不存在的,POST,200,仍返回SUCCESS避免微信重试,但内部记录异常,P0,鲁棒性,已通过
+API-M04-007,报名缴费,报表查询,GET,/api/report/finance/daily,ZW-API-059,日报表-今日数据合计与流水一致,date=今天,200,data.total=流水表今天sum 每个渠道正确,P0,数据校验,已通过
+API-M04-007,报名缴费,报表查询,GET,/api/report/finance/daily,ZW-API-060,日报表-非管理员看自己校区,"Authorization: Bearer {校长}",东葛校长,200,只能看到东葛 看不到其他校区,P0,数据权限,已通过
+API-M04-008,报名缴费,转课,POST,/api/transfer,ZW-API-061,转课-正常-补差,"Authorization: Bearer {token}",正常转课,200,原课时扣减 新课时增加 差额收取 生成转课单,P0,转课,已通过
+API-M04-008,报名缴费,转课,POST,/api/transfer,ZW-API-062,转课-已消耗课时不能转,消耗3 转全部20,POST,200,code=400 已消耗课时不可转,P1,约束,已通过
+API-M07-001,报表,课时报表,GET,/api/report/course-hours,ZW-API-063,报表-多维度筛选 班级+教师+月份,条件班级+教师+2025-06,200,返回总课时数=考勤记录sum, P1,聚合,已通过
+API-M07-001,报表,课时报表,GET,/api/report/course-hours,ZW-API-064,报表导出-大数据量Excel导出,大条件,200,生成taskId 可下载,P1,大导出,已通过
+API-M05-001,智能排课,自动排课,POST,/api/schedule/auto,ZW-API-065,自动排课-触发成功,参数排课规则,POST,200,返回taskId 状态Running→Finished后产生排课结果,P1,异步任务,已通过
+API-M05-001,智能排课,自动排课,POST,/api/schedule/auto,ZW-API-066,自动排课-冲突检测 教师时间冲突,老师A同一时间已有课,POST,200,结果中该班级提示冲突且不排入,P0,核心规则,已失败-已修复
+API-M05-002,智能排课,保存排课,PUT,/api/schedule/{id},ZW-API-067,手动调课-保存成功,正常参数,200,课表被更新 对应学员老师小程序课表同步更新,P0,同步,已通过
+API-M08-001,小程序,小程序登录,POST,/api/wx/login,ZW-API-068,小程序-code换token成功,code=有效js_code,POST,200,返回openid+token+绑定学员信息,P0,微信登录,已通过
+API-M08-001,小程序,小程序登录,POST,/api/wx/login,ZW-API-069,小程序-code过期或无效,code=无效,200,code=5001 msg=登录凭证无效,P1,异常,已通过
+API-M08-002,小程序,学员缴费,POST,/api/wx/enrollment/pay,ZW-API-070,小程序支付-下单拉起微信支付,正常,200,返回payParams:timeStamp nonceStr package signType paySign,P0,拉起支付,已通过
+API-M08-003,小程序,我的课表,GET,/api/wx/schedule/mine,ZW-API-071,我的课表-本周,token=学员,date=本周,200,每天的课都正确显示 状态已到课/未上,P1,场景法,已通过
+API-M09-001,教师H5,考勤打卡,POST,/api/teacher/attendance,ZW-API-072,考勤-正常打卡定位范围内,"Authorization: Bearer {teacher}",courseId + 定位,200,code=0 考勤成功 扣1课时,P0,核心业务,已通过
+API-M09-001,教师H5,考勤打卡,POST,/api/teacher/attendance,ZW-API-073,考勤-定位超出范围5km,假定位>5km,200,code=4001 超出上课地点范围,P0,LBS校验,已通过
+API-M09-001,教师H5,考勤打卡,POST,/api/teacher/attendance,ZW-API-074,考勤-同一班级重复打卡,同一个班一天打2次,2次,200,第2次提示今日已考勤,P1,重复,已通过
+API-M09-002,教师H5,评价,POST,/api/teacher/evaluation,ZW-API-075,课堂评价-5星+文字,5星+内容200字,POST,200,保存成功 家长端小程序可见,P1,功能,已通过
+API-M09-002,教师H5,评价,POST,/api/teacher/evaluation,ZW-API-076,评价-空内容,内容空,POST,200,code=400 必须填写评价内容,P1,校验,已通过
+API-通用,通用-限流,所有接口,,ZW-API-077,限流-单IP一分钟>100次,用JMeter或脚本高频,429,返回429 Too Many Requests Retry-After: 30,P0,安全,已通过
+API-通用,通用-日志,所有接口,,ZW-API-078,操作日志记录-敏感操作,登录/新增/修改/删除/退费,200,操作日志表有记录 用户Id 时间 IP 方法 URL 参数,P0,审计,已通过
+API-通用,通用-响应,所有接口,,ZW-API-079,响应结构一致性,成功/失败,所有,"{code:number, msg:string, data:any, timestamp:number} 格式统一",P1,规范,已通过
+API-通用,通用-时区,所有时间字段,,ZW-API-080,时间字段返回带时区Z或+08:00,创建接口,200,所有时间符合ISO8601 或统一北京时间,P1,规范,已通过
+API-M01-001,权限登录,登出,POST,/api/auth/logout,ZW-API-081,登出成功token失效,有效token,POST,200,再次用该token访问业务接口返回401,P0,注销,已通过
+API-M01-001,权限登录,登出,POST,/api/auth/logout,ZW-API-082,登出-无效token访问登出,无效token,POST,200,仍然返回成功 不报错,P1,鲁棒性,已通过
+API-M01-003,权限,修改密码,PUT,/api/auth/password,ZW-API-083,修改密码-正确旧密码,旧密码正确+新密码符合规则,PUT,200,修改成功 旧token全部失效,P0,安全,已通过
+API-M01-003,权限,修改密码,PUT,/api/auth/password,ZW-API-084,修改密码-错误旧密码,旧密码错,PUT,200,code=1010 旧密码错误,P0,校验,已通过
+API-M01-003,权限,修改密码,PUT,/api/auth/password,ZW-API-085,修改密码-新密码不符合复杂度(小于8位),新密码=12345,PUT,200,code=400 密码需至少8位 含大小写字母数字特殊字符,P0,复杂度,已通过
+API-M02-008,学员管理,批量分配跟进人,PUT,/api/student/batch-assign,ZW-API-086,批量-正常分配100个,ids=100个ID,PUT,200,code=0 success=100,P1,批量,已通过
+API-M02-008,学员管理,批量分配跟进人,PUT,/api/student/batch-assign,ZW-API-087,批量-id不存在1个 事务回滚,100个中1个无效,PUT,200,code=404 或 partial success根据配置,P0,事务,已通过
+API-M02-008,学员管理,批量分配跟进人,PUT,/api/student/batch-assign,ZW-API-088,批量-空ids,ids=[],PUT,200,code=400 必须选择,P1,参数,已通过
+API-M04-001,报名缴费,创建报名订单,POST,/api/enrollment,ZW-API-089,下单-班级已满排队,容量满 队列空,POST,200,返回排队号 订单状态=排队中,P1,场景,已通过
+API-M04-001,报名缴费,创建报名订单,POST,/api/enrollment,ZW-API-090,下单-黑名单学员,黑名单学员,POST,200,code=3010 学员在黑名单,P0,业务,已通过
+API-M04-009,报名缴费,催缴提醒,POST,/api/enrollment/remind/{id},ZW-API-091,手动催缴-微信模板消息,id有效,POST,200,发送成功 家长端可收到,P1,通知,已通过
+API-M04-009,报名缴费,催缴提醒,POST,/api/enrollment/remind/{id},ZW-API-092,催缴-同一订单1小时内重复,同1订单10分钟内发2次,200,第2次提示发送太频繁,请1小时后再试,P1,限流,已通过
+API-M08-004,小程序,请假,POST,/api/wx/leave,ZW-API-093,请假-上课前24小时可请,时间符合,200,成功 老师收到消息,P1,场景,已通过
+API-M08-004,小程序,请假,POST,/api/wx/leave,ZW-API-094,请假-上课前1小时不允许,时间=1h后上课,200,code=400 距离上课不足时间,P1,规则,已通过
+API-M08-004,小程序,请假,POST,/api/wx/leave,ZW-API-095,请假-同节课重复,同节课请了又请,2次,200,第2次提示已请假,P1,重复,已通过
+API-M08-005,小程序,课时明细,GET,/api/wx/student/hours,ZW-API-096,课时明细-总计,学员token,200,总剩余=购买-消耗-请假作废 与聚合SQL一致,P0,数据,已通过
+API-M09-003,教师H5,课酬查询,GET,/api/teacher/salary,ZW-API-097,课酬-本月,teacher token 2025-06,200,课酬合计=每节课(基础+提成) 规则一致,P1,计算,已通过
+API-M09-003,教师H5,课酬查询,GET,/api/teacher/salary,ZW-API-098,课酬-教师A不能看教师B的,teacherA token userId=B参数,200,强制过滤 仅返回自己的,P0,越权,已通过
+API-通用-上传,文件上传,POST,/api/common/upload,ZW-API-099,上传-正常图片,jpg < 10M,POST,200,返回url 可访问 存在COS,P1,上传,已通过
+API-通用-上传,文件上传,POST,/api/common/upload,ZW-API-100,上传-禁止.jsp .php .jspx,.jsp文件,POST,200/400,拦截 不存入,P0,安全,已通过
+API-通用-上传,文件上传,POST,/api/common/upload,ZW-API-101,上传-图片木马（图片内容含php代码）,构造图片马,POST,200,后端检测并隔离 or 删除,P0,安全,已通过
+API-通用-上传,文件上传,POST,/api/common/upload,ZW-API-102,上传-超过大小限制,50MB图片,POST,413/400,超过10MB被拒,P1,限制,已通过
+API-M07-002,报表,学员报表,GET,/api/report/student,ZW-API-103,学员漏斗报表,按月份,200,意向→试听→报名→在读 漏斗数据正确 总数一致,P1,BI,已通过
+API-M07-002,报表,学员报表,GET,/api/report/student,ZW-API-104,报表空数据处理,校区没数据,200,返回空数组 不报错,P1,鲁棒性,已通过
+API-M01-004,权限,角色列表,GET,/api/role/list,ZW-API-105,角色-超级管理员可见全部,"Authorization: Bearer {admin}",无,200,全部角色,P0,权限,已通过
+API-M01-004,权限,角色列表,GET,/api/role/list,ZW-API-106,角色-普通角色不能看,"Authorization: Bearer {sales}",无,403,403,P0,权限,已通过
+API-M01-005,权限,操作日志,GET,/api/log/operation,ZW-API-107,审计-日志按条件筛选,用户+模块+时间,200,结果正确,操作时间倒序,P1,审计,已通过
+API-M01-005,权限,操作日志,GET,/api/log/operation,ZW-API-108,审计-普通用户不能看所有日志,"Authorization: Bearer {sales}",无,403,仅看自己的,P0,权限,已通过
+API-M02-001,学员管理,获取学员列表,GET,/api/student/list,ZW-API-109,大数据分页性能,size=100 total=10万,200,响应时间<500ms,P1,性能,已通过
+API-M04-001,报名缴费,创建报名订单,POST,/api/enrollment,ZW-API-110,高并发下单,500并发,压测,多为200,不出现超卖 不多扣钱,P0,性能,已通过
+API-M04-006,报名缴费,回调,POST,/api/pay/callback/wx,ZW-API-111,回调-无sign参数,POST无sign,200,验签失败 内部处理成功返回SUCCESS 防重试,P1,鲁棒性,已通过
+API-M04-006,报名缴费,回调,POST,/api/pay/callback/wx,ZW-API-112,回调-XML包含恶意实体注入,XXE构造payload,POST回调,200,不解析外部实体 无XXE,P0,安全-XXE,已通过
+API-M02-002,学员管理,新增学员,POST,/api/student,ZW-API-113,超长字段-name=1000字,输入1000字,200,被截断或提示字段超长 不500,P1,长度校验,已通过
+API-M02-002,学员管理,新增学员,POST,/api/student,ZW-API-114,emoji表情,姓名含emoji,200,正确保存或提示不支持 不500,P1,字符集,已通过
+API-M02-002,学员管理,新增学员,POST,/api/student,ZW-API-115,参数缺失 所有非必填都不传,仅传必填,200,成功 非必填使用默认值,P1,参数,已通过
+API-M02-002,学员管理,新增学员,POST,/api/student,ZW-API-116,多余参数 传入不存在的字段,传unknown_field,200,忽略多余 不报异常,P1,鲁棒性,已通过
+API-M02-003,学员管理,编辑学员,PUT,/api/student/{id},ZW-API-117,部分更新 PATCH语义,只改name字段,PUT/POST,200,只更新name 其他字段保持原值,P1,部分更新,已通过
+API-通用,404,不存在的URL,GET,/api/not-exist-xxx,ZW-API-118,404响应规范,any,404,{code:404,msg:"接口不存在"},P1,规范,已通过
+API-通用,请求方法错误,学员列表用POST,POST,/api/student/list,ZW-API-119,405 方法不允许,POST,405,405 Method Not Allowed,P1,规范,已通过
+API-通用,Content-Type错误,学员新增用form-urlencoded 后端只接受json,application/x-www-form-urlencoded,POST,415,415 Unsupported Media Type 或自动兼容,P1,规范,已通过
+API-M08-001,小程序,绑定账号,POST,/api/wx/bind,ZW-API-120,绑定-手机号+验证码,手机+正确验证码,200,绑定成功 用户信息关联,P0,绑定,已通过
+API-M08-001,小程序,绑定账号,POST,/api/wx/bind,ZW-API-121,绑定-验证码错误,手机+验证码错误,200,code=5101 验证码错误,P1,校验,已通过
+API-M08-001,小程序,绑定账号,POST,/api/wx/bind,ZW-API-122,绑定-验证码过期(5分钟),>5分钟,200,code=5102 验证码已过期,P1,过期,已通过
+API-M08-001,小程序,绑定账号,POST,/api/wx/bind,ZW-API-123,绑定-重复发送验证码限流,1分钟>5次,POST,200,提示发送过于频繁,P0,限流防刷,已通过
+API-M08-006,小程序,消息列表,GET,/api/wx/messages,ZW-API-124,消息-分页+已读未读,page=1,200,未读数量=unreadCount正确,P1,功能,已通过
+API-M08-006,小程序,消息列表,PUT,/api/wx/messages/read,ZW-API-125,消息-全部已读,PUT all,200,所有变为已读,P1,功能,已通过
+API-M09-004,教师H5,作业发布,POST,/api/teacher/homework,ZW-API-126,发布作业-附件+图片+截止,正常参数,200,创建成功 家长端可见,P1,功能,已通过
+API-M09-004,教师H5,作业发布,POST,/api/teacher/homework,ZW-API-127,作业-截止时间<现在,截止=过去,200,code=400 截止时间需晚于当前,P1,校验,已通过
+API-SYS-001,系统,字典,GET,/api/sys/dict/type,ZW-API-128,字典-年级列表,grade,200,data=所有年级字典值 id name order,P1,功能,已通过
+API-SYS-001,系统,字典,GET,/api/sys/dict/type,ZW-API-129,字典-未知类型,type=unknown,200,返回空数组 不报错,P1,鲁棒性,已通过
+API-SYS-002,系统,公告,GET,/api/sys/notice,ZW-API-130,公告-最新top5,top=5,200,按createTime倒序≤5条,P1,功能,已通过
