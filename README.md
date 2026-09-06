@@ -1,6 +1,6 @@
 # 某教育教务管理系统 · 测试项目
 
-> **项目名称**：某教育教务管理 SaaS 系统（ZiweiEdu-EMS）  
+> **项目名称**：某教育教务管理 SaaS 系统（EduEMS-EMS）  
 > **被测对象**：后台管理端（Web）+ 学员端小程序 + 教师端 H5  
 > **核心模块**：学员管理、课程排课、报名缴费、教学评价、财务报表、系统权限  
 > **测试类型**：功能测试 + 接口测试 + 性能测试 + UI 测试 + 兼容性测试  
@@ -66,7 +66,7 @@ run_api_test.bat
 
 1. 打开 Postman → Import → 选择 `03-接口测试/Postman-集合-某教育-v1.0.json`
 2. 导入环境变量 `Postman-环境变量-测试环境.json`
-3. 设置 baseUrl 为 `http://test.ziweiedu.com:8080`
+3. 设置 baseUrl 为 `http://test.example-ems.com:8080`
 4. Run Collection → 配合 Newman 可做 CI 集成
 
 ### 3. JMeter 性能压测
