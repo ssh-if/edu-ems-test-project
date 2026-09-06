@@ -1,0 +1,179 @@
+{
+  "info": {
+    "_postman_id": "zw-edu-ems-api-v1",
+    "name": "紫薇教育教务管理系统 API v1.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://test.ziweiedu.com:8080", "type": "string" },
+    { "key": "adminToken", "value": "", "type": "string" },
+    { "key": "salesToken", "value": "", "type": "string" },
+    { "key": "financeToken", "value": "", "type": "string" },
+    { "key": "studentOpenId", "value": "oAbcDef1234567890", "type": "string" },
+    { "key": "lastOrderId", "value": "", "type": "string" },
+    { "key": "lastStudentId", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "01-权限登录模块",
+      "item": [
+        {
+          "name": "1.1 管理员登录-正确账号",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('登录成功 code=0', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.code).to.eql(0);",
+                  "  pm.expect(json.data.token).to.be.a('string').and.to.have.length.above(30);",
+                  "  pm.collectionVariables.set('adminToken', json.data.token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "{{baseUrl}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\":\"admin\",\"password\":\"Admin@123#\"}"
+            }
+          }
+        },
+        {
+          "name": "1.2 登录-密码错误",
+          "event": [{"listen":"test","script":{"exec":["pm.test('密码错误 code=1001',()=>{const j=pm.response.json();pm.expect(j.code).to.eql(1001);pm.expect(j.data).to.not.have.property('token');});"]}}],
+          "request": {"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"url":"{{baseUrl}}/api/auth/login","body":{"mode":"raw","raw":"{\"username\":\"admin\",\"password\":\"wrongPass\"}"}}
+        },
+        {
+          "name": "1.3 登录-SQL注入检测",
+          "event":[{"listen":"test","script":{"exec":["pm.test('注入未成功 code≠0 且无用户数据',()=>{const j=pm.response.json();pm.expect(j.code).to.not.eql(0);});"]}}],
+          "request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"url":"{{baseUrl}}/api/auth/login","body":{"mode":"raw","raw":"{\"username\":\"' OR 1=1 --\",\"password\":\"any\"}"}}
+        },
+        {
+          "name": "1.4 刷新Token",
+          "event":[{"listen":"test","script":{"exec":["pm.test('刷新成功',()=>{pm.expect(pm.response.code).to.be.oneOf([200]);});"]}}],
+          "request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{adminToken}}"}],"url":"{{baseUrl}}/api/auth/refresh","body":{"mode":"raw","raw":"{\"refreshToken\":\"demo_refresh_token_value\"}"}}
+        },
+        {
+          "name": "1.5 修改密码",
+          "request":{"method":"PUT","header":[{"key":"Authorization","value":"Bearer {{adminToken}}"}],"url":"{{baseUrl}}/api/auth/password","body":{"mode":"raw","raw":"{\"oldPassword\":\"Admin@123#\",\"newPassword\":\"NewPass@2025\",\"confirmPassword\":\"NewPass@2025\"}"}}
+        },
+        {
+          "name": "1.6 登出",
+          "request":{"method":"POST","header":[{"key":"Authorization","value":"Bearer {{adminToken}}"}],"url":"{{baseUrl}}/api/auth/logout"}
+        }
+      ]
+    },
+    {
+      "name": "02-学员管理模块",
+      "item": [
+        {
+          "name": "2.1 获取学员列表-默认分页",
+          "event":[{"listen":"test","script":{"exec":["pm.test('列表200且records≤10',()=>{const j=pm.response.json();pm.expect(j.code).eql(0);pm.expect(j.data.records.length).lte(10);pm.expect(j.data.total).gte(0);});"]}}],
+          "request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{adminToken}}"}],"url":{"raw":"{{baseUrl}}/api/student/list?page=1&size=10","host":["{{baseUrl}}"],"path":["api","student","list"],"query":[{"key":"page","value":"1"},{"key":"size","value":"10"},{"key":"keyword","value":""},{"key":"campusId","value":""},{"key":"status","value":""}]}}
+        },
+        {
+          "name": "2.2 获取学员列表-按手机号搜索",
+          "request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{adminToken}}"}],"url":"{{baseUrl}}/api/student/list?page=1&size=10&keyword=13800138001"}
+        },
+        {
+          "name": "2.3 获取学员列表-数据权限(销售账号只能看自己)",
+          "event":[{"listen":"test","script":{"exec":["pm.test('所有返回记录followUserId等于销售id',()=>{const j=pm.response.json();if(j.data&&j.data.records){j.data.records.forEach(r=>pm.expect(r.followUserId).to.eql(2));}});"]}}],
+          "request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{salesToken}}"}],"url":"{{baseUrl}}/api/student/list"}
+        },
+        {
+          "name": "2.4 新增学员-完整参数",
+          "event":[{"listen":"test","script":{"exec":["pm.test('新增成功 id>0',()=>{const j=pm.response.json();pm.expect(j.code).eql(0);pm.collectionVariables.set('lastStudentId', j.data && j.data.id);});"]}}],
+          "request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{adminToken}}"}],"url":"{{baseUrl}}/api/student","body":{"mode":"raw","raw":"{\n  \"name\": \"接口测试学员{{$randomInt}}\",\n  \"mobile\": \"139{{$randomInt}}\",\n  \"gender\": 1,\n  \"birthday\": \"2015-06-01\",\n  \"gradeId\": 3,\n  \"sourceId\": 1,\n  \"campusId\": 1,\n  \"followUserId\": 1,\n  \"parentName\": \"张父\",\n  \"parentMobile\": \"13800000001\"\n}"}}
+        },
+        {
+          "name": "2.5 新增学员-手机号重复",
+          "event":[{"listen":"test","script":{"exec":["pm.test('重复手机号 code=2001',()=>{pm.expect(pm.response.json().code).eql(2001);});"]}}],
+          "request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{adminToken}}"}],"url":"{{baseUrl}}/api/student","body":{"mode":"raw","raw":"{\"name\":\"重复\",\"mobile\":\"13800138001\",\"gradeId\":1,\"sourceId\":1,\"campusId\":1,\"followUserId\":1}"}}
+        },
+        {
+          "name": "2.6 新增学员-XSS检测",
+          "event":[{"listen":"test","script":{"exec":["pm.test('XSS被转义或拦截',()=>{const t=pm.response.text();pm.expect(t).to.not.include('<script>');});"]}}],
+          "request":{"method":"POST","header":[{"key":"Authorization","value":"Bearer {{adminToken}}"}],"url":"{{baseUrl}}/api/student","body":{"mode":"raw","raw":"{\"name\":\"<script>alert(1)</script>\",\"mobile\":\"13911112222\",\"gradeId\":1,\"sourceId\":1,\"campusId\":1,\"followUserId\":1}"}}
+        },
+        {
+          "name": "2.7 编辑学员-修改手机号",
+          "request":{"method":"PUT","header":[{"key":"Authorization","value":"Bearer {{adminToken}}"}],"url":"{{baseUrl}}/api/student/{{lastStudentId}}","body":{"mode":"raw","raw":"{\"id\":{{lastStudentId}},\"mobile\":\"13999999999\"}"}}
+        },
+        {
+          "name": "2.8 删除学员-软删除",
+          "request":{"method":"DELETE","header":[{"key":"Authorization","value":"Bearer {{adminToken}}"}],"url":"{{baseUrl}}/api/student/{{lastStudentId}}"}
+        },
+        {
+          "name": "2.9 学员详情",
+          "request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{adminToken}}"}],"url":"{{baseUrl}}/api/student/{{lastStudentId}}"}
+        },
+        {
+          "name": "2.10 学员详情-脱敏验证(销售token)",
+          "event":[{"listen":"test","script":{"exec":["pm.test('手机号脱敏 含****',()=>{const mobile=pm.response.json().data.mobile;pm.expect(mobile).to.include('****');});"]}}],
+          "request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{salesToken}}"}],"url":"{{baseUrl}}/api/student/{{lastStudentId}}"}
+        }
+      ]
+    },
+    {
+      "name": "03-报名缴费模块",
+      "item": [
+        {
+          "name": "3.1 创建报名订单-全款",
+          "event":[{"listen":"test","script":{"exec":["pm.test('下单成功 返回orderId',()=>{const j=pm.response.json();pm.expect(j.code).eql(0);pm.expect(j.data.orderId).to.be.ok;pm.collectionVariables.set('lastOrderId',j.data.orderId);});"]}}],
+          "request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{adminToken}}"}],"url":"{{baseUrl}}/api/enrollment","body":{"mode":"raw","raw":"{\n  \"studentId\": {{lastStudentId}},\n  \"courseId\": 1001,\n  \"classId\": 2001,\n  \"hours\": 20,\n  \"couponId\": null,\n  \"payMethod\": 1,\n  \"remark\": \"接口自动化下单\"\n}"}}
+        },
+        {
+          "name": "3.2 创建订单-前端篡改金额安全校验",
+          "event":[{"listen":"test","script":{"exec":["pm.test('以后端计算为准 实付=1800',()=>{const j=pm.response.json();pm.expect(j.data.payAmount).to.eql(1800);});"]}}],
+          "request":{"method":"POST","header":[{"key":"Authorization","value":"Bearer {{adminToken}}"}],"url":"{{baseUrl}}/api/enrollment","body":{"mode":"raw","raw":"{\"studentId\":1001,\"courseId\":1001,\"classId\":2001,\"hours\":20,\"amount\":0.01}"}}
+        },
+        {
+          "name": "3.3 订单列表-分页搜索",
+          "request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{adminToken}}"}],"url":"{{baseUrl}}/api/enrollment/list?page=1&size=20&sort=createTime&order=desc"}
+        },
+        {
+          "name": "3.4 订单详情",
+          "request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{adminToken}}"}],"url":"{{baseUrl}}/api/enrollment/{{lastOrderId}}"}
+        },
+        {
+          "name": "3.5 退费申请-正常申请",
+          "request":{"method":"POST","header":[{"key":"Authorization","value":"Bearer {{adminToken}}"}],"url":"{{baseUrl}}/api/refund","body":{"mode":"raw","raw":"{\"orderId\":\"{{lastOrderId}}\",\"refundHours\":5,\"reason\":\"搬家\",\"reasonType\":1}"}}
+        },
+        {
+          "name": "3.6 财务日报",
+          "request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{financeToken}}"}],"url":"{{baseUrl}}/api/report/finance/daily?date=2025-06-20"}
+        },
+        {
+          "name": "3.7 模拟微信支付回调",
+          "event":[{"listen":"test","script":{"exec":["pm.test('返回SUCCESS XML',()=>{pm.expect(pm.response.text()).to.include('<return_code>SUCCESS</return_code>');});"]}}],
+          "request":{"method":"POST","header":[{"key":"Content-Type","value":"application/xml"}],"url":"{{baseUrl}}/api/pay/callback/wx","body":{"mode":"raw","raw":"<xml><return_code>SUCCESS</return_code><out_trade_no>{{lastOrderId}}</out_trade_no><total_fee>180000</total_fee><sign>MOCK_SIGN</sign></xml>"}}
+        }
+      ]
+    },
+    {
+      "name": "04-小程序端&教师H5",
+      "item": [
+        {"name":"4.1 小程序code登录","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"url":"{{baseUrl}}/api/wx/login","body":{"mode":"raw","raw":"{\"code\":\"mock_js_code_001\"}"}}},
+        {"name":"4.2 小程序我的课表","request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer wx_token_here"}],"url":"{{baseUrl}}/api/wx/schedule/mine?weekStart=2025-06-16"}},
+        {"name":"4.3 教师H5-考勤打卡","request":{"method":"POST","header":[{"key":"Authorization","value":"Bearer teacher_token"}],"url":"{{baseUrl}}/api/teacher/attendance","body":{"mode":"raw","raw":"{\"courseId\":3001,\"lat\":22.82300,\"lng\":108.37800}"}}},
+        {"name":"4.4 教师H5-课酬查询","request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer teacher_token"}],"url":"{{baseUrl}}/api/teacher/salary?month=2025-06"}}
+      ]
+    },
+    {
+      "name": "05-性能测试采样接口",
+      "item": [
+        {"name":"P1-登录接口(压测)", "request":{"method":"POST","url":"{{baseUrl}}/api/auth/login","body":{"mode":"raw","raw":"{\"username\":\"perf_user\",\"password\":\"Perf@123\"}"}}},
+        {"name":"P2-报名缴费查询(压测)","request":{"method":"GET","url":"{{baseUrl}}/api/enrollment/list?page=1&size=20"}},
+        {"name":"P3-财务报表查询(压测)","request":{"method":"GET","url":"{{baseUrl}}/api/report/finance/daily?date=2025-06-20"}},
+        {"name":"P4-学员列表搜索(压测)","request":{"method":"GET","url":"{{baseUrl}}/api/student/list?page=1&size=10&keyword=张三"}}
+      ]
+    }
+  ]
+}
