@@ -61,7 +61,7 @@ class TestStudent:
     @allure.story("学员列表")
     @allure.title("P0-按手机号精确搜索")
     def test_list_search_mobile(self, admin_token):
-        mobile = "13800138001"
+        mobile = "138****0000"
         resp = requests.get(f"{API}/list", headers=headers(admin_token),
                             params={"page":1,"size":10,"keyword":mobile}, timeout=TIMEOUT)
         body = http_assert(resp)
@@ -141,7 +141,7 @@ class TestStudent:
     @allure.story("新增学员")
     @allure.title("P1-手机号12位边界值400")
     def test_create_mobile_12_len(self, admin_token):
-        p = {"name":"边界","mobile":"138001380011","gradeId":1,"sourceId":1,"campusId":1,"followUserId":1}
+        p = {"name":"边界","mobile":"138****00001","gradeId":1,"sourceId":1,"campusId":1,"followUserId":1}
         resp = requests.post(f"{API}", headers=headers(admin_token), json=p, timeout=TIMEOUT)
         http_assert(resp, 200, 400, "手机")
 
