@@ -2,7 +2,7 @@
   "id": "zw-edu-env-sit",
   "name": "某教育-SIT测试环境",
   "values": [
-    { "key": "baseUrl", "value": "http://test.ziweiedu.com:8080", "enabled": true },
+    { "key": "baseUrl", "value": "http://test.example-ems.com:8080", "enabled": true },
     { "key": "admin_username", "value": "admin", "enabled": true },
     { "key": "admin_password", "value": "Admin@123#", "enabled": true },
     { "key": "sales_username", "value": "sales01", "enabled": true },
