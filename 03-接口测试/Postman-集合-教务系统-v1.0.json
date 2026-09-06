@@ -5,7 +5,7 @@
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "baseUrl", "value": "http://test.ziweiedu.com:8080", "type": "string" },
+    { "key": "baseUrl", "value": "http://test.example-ems.com:8080", "type": "string" },
     { "key": "adminToken", "value": "", "type": "string" },
     { "key": "salesToken", "value": "", "type": "string" },
     { "key": "financeToken", "value": "", "type": "string" },
@@ -80,7 +80,7 @@
         },
         {
           "name": "2.2 获取学员列表-按手机号搜索",
-          "request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{adminToken}}"}],"url":"{{baseUrl}}/api/student/list?page=1&size=10&keyword=13800138001"}
+          "request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{adminToken}}"}],"url":"{{baseUrl}}/api/student/list?page=1&size=10&keyword=138****0000"}
         },
         {
           "name": "2.3 获取学员列表-数据权限(销售账号只能看自己)",
@@ -90,21 +90,21 @@
         {
           "name": "2.4 新增学员-完整参数",
           "event":[{"listen":"test","script":{"exec":["pm.test('新增成功 id>0',()=>{const j=pm.response.json();pm.expect(j.code).eql(0);pm.collectionVariables.set('lastStudentId', j.data && j.data.id);});"]}}],
-          "request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{adminToken}}"}],"url":"{{baseUrl}}/api/student","body":{"mode":"raw","raw":"{\n  \"name\": \"接口测试学员{{$randomInt}}\",\n  \"mobile\": \"139{{$randomInt}}\",\n  \"gender\": 1,\n  \"birthday\": \"2015-06-01\",\n  \"gradeId\": 3,\n  \"sourceId\": 1,\n  \"campusId\": 1,\n  \"followUserId\": 1,\n  \"parentName\": \"张父\",\n  \"parentMobile\": \"13800000001\"\n}"}}
+          "request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{adminToken}}"}],"url":"{{baseUrl}}/api/student","body":{"mode":"raw","raw":"{\n  \"name\": \"接口测试学员{{$randomInt}}\",\n  \"mobile\": \"139{{$randomInt}}\",\n  \"gender\": 1,\n  \"birthday\": \"2015-06-01\",\n  \"gradeId\": 3,\n  \"sourceId\": 1,\n  \"campusId\": 1,\n  \"followUserId\": 1,\n  \"parentName\": \"张父\",\n  \"parentMobile\": \"138****0000\"\n}"}}
         },
         {
           "name": "2.5 新增学员-手机号重复",
           "event":[{"listen":"test","script":{"exec":["pm.test('重复手机号 code=2001',()=>{pm.expect(pm.response.json().code).eql(2001);});"]}}],
-          "request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{adminToken}}"}],"url":"{{baseUrl}}/api/student","body":{"mode":"raw","raw":"{\"name\":\"重复\",\"mobile\":\"13800138001\",\"gradeId\":1,\"sourceId\":1,\"campusId\":1,\"followUserId\":1}"}}
+          "request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{adminToken}}"}],"url":"{{baseUrl}}/api/student","body":{"mode":"raw","raw":"{\"name\":\"重复\",\"mobile\":\"138****0000\",\"gradeId\":1,\"sourceId\":1,\"campusId\":1,\"followUserId\":1}"}}
         },
         {
           "name": "2.6 新增学员-XSS检测",
           "event":[{"listen":"test","script":{"exec":["pm.test('XSS被转义或拦截',()=>{const t=pm.response.text();pm.expect(t).to.not.include('<script>');});"]}}],
-          "request":{"method":"POST","header":[{"key":"Authorization","value":"Bearer {{adminToken}}"}],"url":"{{baseUrl}}/api/student","body":{"mode":"raw","raw":"{\"name\":\"<script>alert(1)</script>\",\"mobile\":\"13911112222\",\"gradeId\":1,\"sourceId\":1,\"campusId\":1,\"followUserId\":1}"}}
+          "request":{"method":"POST","header":[{"key":"Authorization","value":"Bearer {{adminToken}}"}],"url":"{{baseUrl}}/api/student","body":{"mode":"raw","raw":"{\"name\":\"<script>alert(1)</script>\",\"mobile\":\"138****0000\",\"gradeId\":1,\"sourceId\":1,\"campusId\":1,\"followUserId\":1}"}}
         },
         {
           "name": "2.7 编辑学员-修改手机号",
-          "request":{"method":"PUT","header":[{"key":"Authorization","value":"Bearer {{adminToken}}"}],"url":"{{baseUrl}}/api/student/{{lastStudentId}}","body":{"mode":"raw","raw":"{\"id\":{{lastStudentId}},\"mobile\":\"13999999999\"}"}}
+          "request":{"method":"PUT","header":[{"key":"Authorization","value":"Bearer {{adminToken}}"}],"url":"{{baseUrl}}/api/student/{{lastStudentId}}","body":{"mode":"raw","raw":"{\"id\":{{lastStudentId}},\"mobile\":\"138****0000\"}"}}
         },
         {
           "name": "2.8 删除学员-软删除",
