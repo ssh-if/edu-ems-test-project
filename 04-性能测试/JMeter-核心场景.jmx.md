@@ -12,7 +12,7 @@
 Test Plan / 某教育-核心场景压测 v1.0
 │
 ├─ User Defined Variables
-│    ├─ baseUrl = http://perf.ziweiedu.com:8080
+│    ├─ baseUrl = http://perf.example-ems.com:8080
 │    ├─ dbHost = 192.168.1.101
 │    ├─ dbUser = perf_root
 │    ├─ dbPwd  = ********
@@ -106,7 +106,7 @@ jmeter -n -t JMeter-核心场景.jmx \
        -l result_500u_$(date +%Y%m%d_%H%M).jtl \
        -e -o ./report_html_500u \
        -Jthreads=500 -Jduration=3600 \
-       -JbaseUrl=http://perf.ziweiedu.com:8080
+       -JbaseUrl=http://perf.example-ems.com:8080
 
 # 参数说明：
 #   -n 非GUI  -t jmx文件  -l jtl结果保存  -e -o 跑完生成HTML报告
