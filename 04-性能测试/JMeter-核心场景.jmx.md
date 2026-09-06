@@ -2,14 +2,14 @@
 
 > 脚本名：`JMeter-核心场景.jmx`  
 > 作者：苏绍彰  
-> 压测目标：紫薇教育 EMS V2.0 四大核心场景
+> 压测目标：某教育 EMS V2.0 四大核心场景
 
 ---
 
 ## 一、Test Plan 结构
 
 ```
-Test Plan / 紫薇教育-核心场景压测 v1.0
+Test Plan / 某教育-核心场景压测 v1.0
 │
 ├─ User Defined Variables
 │    ├─ baseUrl = http://perf.ziweiedu.com:8080
