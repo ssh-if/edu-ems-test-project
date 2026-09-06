@@ -13,7 +13,7 @@ import allure
 from typing import Dict, Any
 
 # ============== 环境配置 ==============
-BASE_URL = os.getenv("ZW_BASE_URL", "http://test.ziweiedu.com:8080")
+BASE_URL = os.getenv("ZW_BASE_URL", "http://test.example-ems.com:8080")
 TIMEOUT = 15
 
 # 测试账号（脱敏）
